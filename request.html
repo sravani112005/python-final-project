@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Requests | Blood Bank System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --blood-red: #d32f2f;
+            --light-red: #ffebee;
+            --dark-red: #b71c1c;
+            --urgent: #ff6b6b;
+            --emergency: #ff0000;
+        }
+        
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        /* Header */
+        .dashboard-header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 15px 25px;
+            margin-bottom: 25px;
+        }
+        
+        /* Blood Request Cards */
+        .request-card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            border-left: 4px solid var(--blood-red);
+        }
+        
+        .request-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+        
+        .request-card.urgent {
+            border-left-color: var(--urgent);
+            background-color: #fff5f5;
+        }
+        
+        .request-card.emergency {
+            border-left-color: var(--emergency);
+            background-color: #ffebeb;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.3); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+        }
+        
+        .blood-badge {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        /* Status Badges */
+        .badge-pending {
+            background-color: #ffc107;
+            color: #000;
+        }
+        
+        .badge-processing {
+            background-color: #17a2b8;
+            color: white;
+        }
+        
+        .badge-fulfilled {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        /* Filter Controls */
+        .filter-container {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        
+        /* Action Buttons */
+        .btn-action {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-details {
+            background-color: var(--blood-red);
+            color: white;
+            border: none;
+        }
+        
+        .btn-details:hover {
+            background-color: var(--dark-red);
+        }
+        
+        /* Stats Cards */
+        .stat-card {
+            border-radius: 10px;
+            padding: 15px;
+            color: white;
+            margin-bottom: 15px;
+        }
+        
+        .stat-card.total {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        
+        .stat-card.pending {
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+        }
+        
+        .stat-card.fulfilled {
+            background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .blood-badge {
+                margin-right: 10px;
+                width: 35px;
+                height: 35px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="dashboard-header d-flex justify-content-between align-items-center">
+            <h4><i class="fas fa-tint text-danger me-2"></i>Blood Request Dashboard</h4>
+            <div class="dropdown">
+                <button class="btn btn-outline-danger dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown">
+                    <i class="fas fa-filter me-1"></i> Filter
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">All Requests</a></li>
+                    <li><a class="dropdown-item" href="#">Pending</a></li>
+                    <li><a class="dropdown-item" href="#">Processing</a></li>
+                    <li><a class="dropdown-item" href="#">Fulfilled</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#">Urgent Only</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="stat-card total">
+                    <h6>Total Requests</h6>
+                    <h2>47</h2>
+                    <i class="fas fa-list-ul float-end fa-2x opacity-50"></i>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card pending">
+                    <h6>Pending</h6>
+                    <h2>12</h2>
+                    <i class="fas fa-clock float-end fa-2x opacity-50"></i>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card fulfilled">
+                    <h6>Fulfilled</h6>
+                    <h2>35</h2>
+                    <i class="fas fa-check-circle float-end fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="filter-container">
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="form-label">Blood Type</label>
+                    <select class="form-select">
+                        <option>All Types</option>
+                        <option>A+</option>
+                        <option>A-</option>
+                        <option>B+</option>
+                        <option>B-</option>
+                        <option>AB+</option>
+                        <option>AB-</option>
+                        <option>O+</option>
+                        <option>O-</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-select">
+                        <option>All Statuses</option>
+                        <option>Pending</option>
+                        <option>Processing</option>
+                        <option>Fulfilled</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date Range</label>
+                    <select class="form-select">
+                        <option>Last 7 Days</option>
+                        <option>Today</option>
+                        <option>This Month</option>
+                        <option>Custom Range</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-danger w-100">
+                        <i class="fas fa-search me-1"></i> Apply Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- Emergency Request -->
+            <div class="col-md-6">
+                <div class="request-card emergency">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start">
+                            <div class="blood-badge" style="background-color: var(--emergency);">O-</div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between">
+                                    <h5>Emergency Request</h5>
+                                    <span class="badge bg-danger">CRITICAL</span>
+                                </div>
+                                <p class="mb-1"><strong>Apollo Hospital</strong> needs <strong>3 units</strong> immediately</p>
+                                <small class="text-muted">Requested: Today, 10:15 AM</small>
+                                <div class="mt-2 d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-dark">Patient: Ramesh K. (Trauma)</span>
+                                    <div>
+                                        <button class="btn-action btn-details me-1">
+                                            <i class="fas fa-phone-alt me-1"></i>Call
+                                        </button>
+                                        <button class="btn-action btn-details">
+                                            <i class="fas fa-check me-1"></i>Fulfill
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Urgent Request -->
+            <div class="col-md-6">
+                <div class="request-card urgent">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start">
+                            <div class="blood-badge" style="background-color: var(--urgent);">AB-</div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between">
+                                    <h5>Urgent Request</h5>
+                                    <span class="badge bg-warning">URGENT</span>
+                                </div>
+                                <p class="mb-1"><strong>City Medical Center</strong> needs <strong>2 units</strong> for surgery</p>
+                                <small class="text-muted">Requested: Today, 9:30 AM</small>
+                                <div class="mt-2 d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-dark">Patient: Sunita M. (Surgery)</span>
+                                    <div>
+                                        <button class="btn-action btn-details me-1">
+                                            <i class="fas fa-info-circle me-1"></i>Details
+                                        </button>
+                                        <button class="btn-action btn-details">
+                                            <i class="fas fa-check me-1"></i>Fulfill
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Normal Requests -->
+            <div class="col-md-6">
+                <div class="request-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start">
+                            <div class="blood-badge" style="background-color: var(--blood-red);">B+</div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between">
+                                    <h5>Standard Request</h5>
+                                    <span class="badge bg-secondary">STANDARD</span>
+                                </div>
+                                <p class="mb-1"><strong>Greenwood Hospital</strong> needs <strong>4 units</strong></p>
+                                <small class="text-muted">Requested: Yesterday, 4:45 PM</small>
+                                <div class="mt-2 d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-success">Status: <span class="badge processing">Processing</span></span>
+                                    <div>
+                                        <button class="btn-action btn-details me-1">
+                                            <i class="fas fa-info-circle me-1"></i>Details
+                                        </button>
+                                        <button class="btn-action btn-details">
+                                            <i class="fas fa-truck me-1"></i>Dispatch
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="request-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start">
+                            <div class="blood-badge" style="background-color: var(--blood-red);">A+</div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between">
+                                    <h5>Standard Request</h5>
+                                    <span class="badge bg-success">FULFILLED</span>
+                                </div>
+                                <p class="mb-1"><strong>Unity Hospital</strong> needed <strong>3 units</strong></p>
+                                <small class="text-muted">Requested: Oct 15, 2:30 PM • Fulfilled: Oct 15, 4:15 PM</small>
+                                <div class="mt-2 d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-dark">Donor: Rajesh P. (ID: DON-4578)</span>
+                                    <div>
+                                        <button class="btn-action btn-details">
+                                            <i class="fas fa-file-alt me-1"></i>Certificate
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="request-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start">
+                            <div class="blood-badge" style="background-color: var(--blood-red);">O+</div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between">
+                                    <h5>Standard Request</h5>
+                                    <span class="badge bg-warning">PENDING</span>
+                                </div>
+                                <p class="mb-1"><strong>Sunshine Clinic</strong> needs <strong>2 units</strong></p>
+                                <small class="text-muted">Requested: Oct 14, 11:20 AM</small>
+                                <div class="mt-2 d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-dark">No matching donors yet</span>
+                                    <div>
+                                        <button class="btn-action btn-details me-1">
+                                            <i class="fas fa-search me-1"></i>Find Donors
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="request-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start">
+                            <div class="blood-badge" style="background-color: var(--blood-red);">AB+</div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between">
+                                    <h5>Standard Request</h5>
+                                    <span class="badge bg-success">FULFILLED</span>
+                                </div>
+                                <p class="mb-1"><strong>Metro Hospital</strong> needed <strong>1 unit</strong></p>
+                                <small class="text-muted">Requested: Oct 13, 3:15 PM • Fulfilled: Oct 13, 5:45 PM</small>
+                                <div class="mt-2 d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-dark">Donor: Priya S. (ID: DON-3289)</span>
+                                    <div>
+                                        <button class="btn-action btn-details">
+                                            <i class="fas fa-file-alt me-1"></i>Certificate
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item disabled">
+                    <a class="page-link" href="#">Previous</a>
+                </li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item">
+                    <a class="page-link" href="#">Next</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Filter functionality
+        document.querySelectorAll('.btn-action').forEach(button => {
+            button.addEventListener('click', function() {
+                const action = this.querySelector('i').className.split(' ')[1];
+                const card = this.closest('.request-card');
+                const bloodType = card.querySelector('.blood-badge').textContent;
+                const hospital = card.querySelector('strong').textContent;
+                
+                switch(action) {
+                    case 'fa-phone-alt':
+                        alert(`Calling ${hospital} about ${bloodType} blood request`);
+                        break;
+                    case 'fa-check':
+                        card.querySelector('.badge').className = 'badge bg-success';
+                        card.querySelector('.badge').textContent = 'FULFILLED';
+                        this.innerHTML = '<i class="fas fa-file-alt me-1"></i>Certificate';
+                        break;
+                    case 'fa-truck':
+                        alert(`Dispatching ${bloodType} blood to ${hospital}`);
+                        break;
+                    case 'fa-search':
+                        alert(`Searching donors for ${bloodType} blood type`);
+                        break;
+                    case 'fa-info-circle':
+                        alert(`Showing detailed information for this request`);
+                        break;
+                    case 'fa-file-alt':
+                        alert(`Generating fulfillment certificate`);
+                        break;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
